@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>S.H.A. ROL</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Nunito:wght@400;600;700;800&display=swap">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+/* Capa Firebase: reemplaza window.claude (db + user) usando Firestore y Auth anónimo. */
+(function(){
+  // Pega aquí tu UID de administrador (lo ves en Perfil, "Tu ID").
+  var ADMIN_UIDS=['PEGA_AQUI_TU_UID'];
+  firebase.initializeApp({
+    apiKey:"AIzaSyC0ngF0YHAHxRFAhYYimcw5rSVn6FhwhSM",
+    authDomain:"sha-rol.firebaseapp.com",
+    projectId:"sha-rol",
+    storageBucket:"sha-rol.firebasestorage.app",
+    messagingSenderId:"387296914047",
+    appId:"1:387296914047:web:ed80a077be35eefb83ed4a"
+  });
+  var auth=firebase.auth(),fs=firebase.firestore();
+  var authP=new Promise(function(res){
+    var un=auth.onAuthStateChanged(function(u){
+      if(u){un();res(u)}
+      else auth.signInAnonymously().catch(function(){res(null)});
+    });
+  });
+  window.claude={use:function(n){
+    if(n==='db')return Promise.resolve(fs);
+    if(n==='user')return authP.then(function(u){return {
+      id:function(){return Promise.resolve(u?u.uid:null)},
+      can:function(){return Promise.resolve(true)},
+      canEdit:function(){return Promise.resolve(!!u&&ADMIN_UIDS.indexOf(u.uid)>=0)}
+    }});
+    return Promise.resolve(null);
+  }};
+})();
+</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app"><main id="main"></main></div>
+<nav class="nav" aria-label="Navegación principal"><div class="nav-in" id="nav"></div></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
